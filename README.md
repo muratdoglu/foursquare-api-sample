@@ -1,1 +1,7 @@
-# foursquare-api-sample
+-Kotlin
+-Mvvm
+-LiveData
+-Databinding
+-Koin
+-Retrofit
+-ConstraintLayout (updated)

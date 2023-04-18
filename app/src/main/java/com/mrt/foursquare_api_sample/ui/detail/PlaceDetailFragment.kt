@@ -5,56 +5,93 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Observer
+import androidx.navigation.Navigation
+import androidx.navigation.fragment.navArgs
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.mrt.foursquare_api_sample.R
+import com.mrt.foursquare_api_sample.data.PlaceDetailResponse
+import com.mrt.foursquare_api_sample.databinding.FragmentPlaceDetailBinding
+import com.mrt.foursquare_api_sample.databinding.FragmentPlaceListBinding
+import com.mrt.foursquare_api_sample.ui.placelist.PlaceListFragmentArgs
+import com.mrt.foursquare_api_sample.ui.placelist.PlaceListViewModel
+import com.mrt.foursquare_api_sample.ui.placelist.PlacesAdapter
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [PlaceDetailFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class PlaceDetailFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    var dialog: BottomSheetDialog? = null
 
+    private var binding: FragmentPlaceDetailBinding? = null
+    val vm: PlaceDetailViewModel by viewModel()
+     var mMap: com.google.android.gms.maps.GoogleMap?=null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
 
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_place_detail, container, false)
+        binding =
+            DataBindingUtil.inflate(inflater, R.layout.fragment_place_detail, container, false)
+        load()
+        listeners()
+        return binding?.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment PlaceDetailFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            PlaceDetailFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
+        mapFragment?.getMapAsync(callback)
     }
+
+    private fun listeners() {
+        vm.placeDetailResponse?.observe(viewLifecycleOwner, Observer {
+           var place= it.geocodes?.main?.latitude?.let { it1 ->
+               it.geocodes?.main?.longitude?.let { it2 ->
+                   LatLng(
+                       it1,
+                       it2
+                   )
+               }
+           }
+            mMap?.addMarker(place?.let { it1 -> MarkerOptions().position(it1).title(it.name) })
+
+            mMap?.addMarker(place?.let { it1 -> MarkerOptions().position(LatLng(47.6170,-122.3435)).title("Center") })
+            mMap?.moveCamera(CameraUpdateFactory.newLatLng(place))
+
+            showDetailDialog(it)
+        })
+
+    }
+
+    private fun showDetailDialog(it: PlaceDetailResponse?) {
+        dialog?.setContentView(R.layout.bottom_place_detail)
+        dialog?.findViewById<TextView>(R.id.tvName)?.text=it?.name
+        dialog?.findViewById<TextView>(R.id.tvAddress)?.text=it?.location?.formatted_address
+        dialog?.findViewById<TextView>(R.id.tvTimeZone)?.text=it?.timezone
+        dialog?.findViewById<TextView>(R.id.tvCategory)?.text=it?.categories?.get(0)?.name
+        dialog?.show()
+    }
+
+    private fun load() {
+        dialog = activity?.let { BottomSheetDialog(it, R.style.AppBottomSheetDialogTheme) }
+        val args: PlaceDetailFragmentArgs by navArgs()
+        vm.getPlaceDetail(args.fsqId)
+    }
+
+    private val callback = OnMapReadyCallback { googleMap ->
+        mMap=googleMap
+        mMap?.animateCamera(CameraUpdateFactory.zoomTo(12f))
+    }
+
 }

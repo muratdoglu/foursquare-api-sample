@@ -1,7 +1,6 @@
 package com.mrt.foursquare_api_sample.ui.placelist
 
 
-import android.media.Image
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +11,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.mrt.foursquare_api_sample.R
 import com.mrt.foursquare_api_sample.data.PlacesBody
-import java.util.ArrayList
+
 
 class PlacesAdapter(
     var placeList: ArrayList<PlacesBody>, private val onItemClick: (info: PlacesBody) -> Unit
@@ -44,19 +43,18 @@ class PlacesAdapter(
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bindItems(
             place: PlacesBody,
-            onItemClick: (info: PlacesBody) -> Unit
+            onItemClick: (place: PlacesBody) -> Unit
         ) {
             itemView.findViewById<TextView>(R.id.tvName).text = place.name
-            itemView.findViewById<TextView>(R.id.tvDistance).text = place.distance.toString()
+            itemView.findViewById<TextView>(R.id.tvDistance).text ="Distance: "+ place.distance.toString()
             if(place.categories?.size?:0>0){
                 var category=place.categories?.get(0)
                 itemView.findViewById<TextView>(R.id.tvCategory).text = category?.name
-                Glide.with(itemView.context)
-                    .load(category?.icon?.prefix?:""+category?.icon?.suffix?:"")
-                    .fitCenter()
-                    .diskCacheStrategy(DiskCacheStrategy.NONE)
-                    .dontAnimate()
-                    .into(itemView.findViewById<ImageView>(R.id.ivIcon))
+
+            }
+
+            itemView.setOnClickListener {
+                onItemClick(place)
             }
 
 

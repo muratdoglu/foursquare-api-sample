@@ -1,7 +1,7 @@
--Kotlin
--Mvvm
--LiveData
--Databinding
--Koin
--Retrofit
--ConstraintLayout (updated)
+-Kotlin <br>
+-Mvvm <br>
+-LiveData <br>
+-Databinding <br>
+-Koin <br>
+-Retrofit <br>
+-ConstraintLayout <strong> (updated) </strong> <br>
